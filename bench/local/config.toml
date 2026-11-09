@@ -1,0 +1,108 @@
+# Конфиг wolf для локального стенда.
+#
+# Отличия от боевого:
+#   * один профиль с одним приложением — процессом wayland-клиента
+#     (wayland-client/wl-shm-client.c), который наполняет виртуальный
+#     дисплей кадрами; GPU-приложения не нужны;
+#   * только программные кодировщики (x264/x265) — на AMD-встройке без
+#     VAAPI, и заодно кодировка настолько медленная, что конвейер
+#     отстаёт (это и нужно для воспроизведения);
+#   * zero copy выключен (WOLF_USE_ZERO_COPY=FALSE): waylanddisplaysrc
+#     отдаёт кадры в обычной памяти, а не в VAMemory.
+#
+# Плейсхолдеры __WIDTH__/__HEIGHT__/__APP_CMD__ подставляет
+# scripts/run-local.sh.
+
+hostname = "wolf-bench"
+config_version = 7
+paired_clients = []
+
+[[profiles]]
+# id профиля, который wolf показывает в Moonlight, жёстко зашит в коде:
+# moonlight-profile-id (events::MOONLIGHT_PROFILE_ID). С другим id /applist
+# падает на std::bad_optional_access и соединение рвётся.
+id = "moonlight-profile-id"
+
+[[profiles.apps]]
+title = "wl-shm"
+start_virtual_compositor = true
+start_audio_server = false
+render_node = "/dev/dri/renderD128"
+
+[profiles.apps.runner]
+type = "process"
+run_cmd = "__APP_CMD__"
+
+[gstreamer.video]
+
+default_source = 'interpipesrc name=interpipesrc_{}_video listen-to={session_id}_video is-live=true stream-sync=restart-ts max-bytes=0 max-buffers=1 leaky-type=downstream'
+
+default_sink = """
+queue ! \
+rtpmoonlightpay_video name=moonlight_pay \
+payload_size={payload_size} fec_percentage={fec_percentage} min_required_fec_packets={min_required_fec_packets} !
+appsink sync=false max-buffers=1 drop=true name=wolf_udp_sink
+"""
+
+[[gstreamer.video.h264_encoders]]
+plugin_name = "x264"
+check_elements = ["x264enc"]
+video_params = """
+videoconvertscale !
+videorate !
+video/x-raw, width={width}, height={height}, framerate={fps}/1, format=I420,
+chroma-site={color_range}, colorimetry={color_space}\
+"""
+video_params_zero_copy = """
+videoconvertscale !
+videorate !
+video/x-raw, width={width}, height={height}, framerate={fps}/1, format=I420,
+chroma-site={color_range}, colorimetry={color_space}\
+"""
+encoder_pipeline = """
+x264enc pass=qual tune=zerolatency speed-preset=superfast b-adapt=false bframes=0 ref=1
+sliced-threads=true threads={slices_per_frame} option-string="slices={slices_per_frame}:keyint=infinite:open-gop=0"
+b-adapt=false bitrate={bitrate} aud=false !
+video/x-h264, profile=high, stream-format=byte-stream\
+"""
+
+[[gstreamer.video.hevc_encoders]]
+plugin_name = "x265"
+check_elements = ["x265enc"]
+video_params = """
+videoconvertscale !
+videorate !
+video/x-raw, width={width}, height={height}, framerate={fps}/1, format=I420,
+chroma-site={color_range}, colorimetry={color_space}\
+"""
+video_params_zero_copy = """
+videoconvertscale !
+videorate !
+video/x-raw, width={width}, height={height}, framerate={fps}/1, format=I420,
+chroma-site={color_range}, colorimetry={color_space}\
+"""
+encoder_pipeline = """
+x265enc tune=zerolatency speed-preset=superfast bitrate={bitrate}
+option-string="info=0:keyint=-1:qp=28:repeat-headers=1:slices={slices_per_frame}:aud=0:annexb=1:log-level=3:open-gop=0:bframes=0:intra-refresh=0" !
+video/x-h265, profile=main, stream-format=byte-stream\
+"""
+
+[gstreamer.audio]
+
+default_source = """
+interpipesrc name=interpipesrc_{}_audio listen-to={session_id}_audio is-live=true stream-sync=restart-ts max-bytes=0 max-buffers=3 block=false\
+"""
+
+default_audio_params = "queue max-size-buffers=3 leaky=downstream ! audiorate ! audioconvert"
+
+default_opus_encoder = """
+opusenc bitrate={bitrate} bitrate-type=cbr frame-size={packet_duration} bandwidth=fullband \
+audio-type=restricted-lowdelay max-payload-size=1400\
+"""
+
+default_sink = """
+queue ! \
+rtpmoonlightpay_audio name=moonlight_pay packet_duration={packet_duration} encrypt={encrypt} \
+aes_key="{aes_key}" aes_iv="{aes_iv}" !
+appsink name=wolf_udp_sink\
+"""
