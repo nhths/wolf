@@ -23,6 +23,14 @@ wolf'а стенд не затрагивает — это самостоятел
 `scripts/link-mtu.sh on 1420` → 0 кадров и обрыв соединения; без
 `link-mtu.sh` или с `PACKET_SIZE=1024` — видео идёт штатно.
 
+Результаты прогонов (метрики лежат в `evidence/`):
+
+| размер пакета | path MTU | результат |
+|---|---|---|
+| 1392 | без ограничения | 1667 / 1678 кадров |
+| 1392 | 1420 | **0 кадров, обрыв кодом -100 через 10.6 с** |
+| 1024 | 1420 | 1641 / 1669 кадров |
+
 ### 2. Лобби и общий producer (гипотеза не подтвердилась)
 
 Раньше считалось, что лобби (один `waylanddisplaysrc` на всех) роняет
@@ -54,7 +62,7 @@ wolf'а стенд не затрагивает — это самостоятел
 | `scripts/run-all.sh` | оркестратор: `build` / `run` / `summary` / `all` |
 | `scripts/summarize.py` | сводная таблица по прогонам + подстановка в `TICKET.md` |
 | `scripts/compare_config.py` | сверка конфига на машине с шаблоном из репозитория |
-| `scripts/publish-to-fork.sh` | публикация стенда в форк отдельной веткой |
+| `evidence/` | метрики трёх прогонов, на которые опирается `TICKET.md` |
 
 ## Локальный стенд
 
@@ -118,7 +126,7 @@ Moonlight, а не с его имитацией.
 
 ```sh
 cd bench
-WOLF_HOST=192.168.31.100 \
+WOLF_HOST=<адрес wolf> \
 DURATION=90 \
 PRODUCER_W=2560 PRODUCER_H=1440 PRODUCER_FPS=60 \
 CLIENT_A="1920 1080 60 20000" \
@@ -193,7 +201,7 @@ FEC-пакеты (parity shards) картинки не несут: их `fecInfo
 работающие настройки.
 
 ```sh
-ssh root@192.168.31.100 'cat /etc/wolf/cfg/config.toml' > /tmp/host-config.toml
+ssh root@<адрес wolf> 'cat /etc/wolf/cfg/config.toml' > /tmp/host-config.toml
 ./scripts/compare_config.py /tmp/host-config.toml \
   ../../src/moonlight-server/state/default/config.v7.toml --section gstreamer
 ```

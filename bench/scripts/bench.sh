@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 # ---------------------------------------------------------------- параметры
-WOLF_HOST="${WOLF_HOST:-192.168.31.100}"
+WOLF_HOST="${WOLF_HOST:-<адрес wolf>}"
 WOLF_CONTAINER="${WOLF_CONTAINER:-wolf-wolf-1}"
 # API wolf живёт на unix-сокете; /var/run/wolf примонтирован на хост из контейнера.
 WOLF_SOCK="${WOLF_SOCK:-/var/run/wolf/wolf.sock}"

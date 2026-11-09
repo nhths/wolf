@@ -18,7 +18,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-IMAGE="${WOLF_IMAGE:-cr.knois.ru/mirror-github/games-on-whales/wolf:sha-db709cf}"
+IMAGE="${WOLF_IMAGE:-ghcr.io/games-on-whales/wolf:latest}"
 CONTAINER="${CONTAINER:-wolf-bench}"
 WORK_DIR="${WORK_DIR:-/tmp/wolf-bench-local}"
 NET="${NET:-host}"
@@ -43,7 +43,7 @@ PIN="${PIN:-1234}"
 # 192.168/16, 169.254/16) — и только тогда НЕ каптит размер RTP-пакета
 # до 1024. Loopback (127/8) в список не входит, поэтому через 127.0.0.1
 # клиент всегда считает сервер удалённым. Чтобы повторить поведение
-# VPN-клиента (адрес 172.26.0.x), стенд ходит на адрес машины в LAN.
+# VPN-клиента (адрес 10.8.0.x), стенд ходит на адрес машины в LAN.
 HOST="${HOST:-127.0.0.1}"
 # потери на loopback (процент пакетов) — эмуляция «VPN-линка»
 LOSS="${LOSS:-0}"

@@ -32,7 +32,7 @@ if (StreamConfig.streamingRemotely == STREAM_CFG_AUTO) {
 
 `isPrivateNetworkAddressV4()` (`PlatformSockets.c:640`) считает приватными
 10/8, 172.16/12, 192.168/16, 169.254/16. **Loopback (127/8) в список не
-входит**, а адрес WireGuard-сервера (172.26.0.x) — входит.
+входит**, а адрес WireGuard-сервера (10.8.0.x) — входит.
 
 Дальше по цепочке:
 
@@ -80,7 +80,7 @@ if (StreamConfig.streamingRemotely == STREAM_CFG_AUTO) {
 
 Поведение клиента видно и в его логе: без капа
 (`Packet size capped at 1024 bytes for remote IPv4 streaming`) — при
-адресе 127.0.0.1; с приватным адресом 192.168.31.241 этой строки нет,
+адресе 127.0.0.1; с приватным адресом 192.168.1.50 этой строки нет,
 то есть пакеты остаются 1392-байтными.
 
 ## Что НЕ является причиной
@@ -120,9 +120,9 @@ cd bench
 ./scripts/build.sh
 
 # воспроизведение: клиент с приватным адресом + path MTU 1420
-NOISE=1 HOST=192.168.31.241 PACKET_SIZE=1392 ./scripts/run-local.sh up
+NOISE=1 HOST=192.168.1.50 PACKET_SIZE=1392 ./scripts/run-local.sh up
 bash scripts/link-mtu.sh on 1420 48110
-HOST=192.168.31.241 PACKET_SIZE=1392 LOBBY=0 DURATION=30 \
+HOST=192.168.1.50 PACKET_SIZE=1392 LOBBY=0 DURATION=30 \
   ARTIFACTS=$PWD/artifacts/mtu-B ./scripts/run-local.sh run
 # → клиент: 0 кадров, соединение прервано (-100)
 bash scripts/link-mtu.sh off

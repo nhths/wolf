@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-WOLF_HOST="${WOLF_HOST:-192.168.31.100}"
+WOLF_HOST="${WOLF_HOST:-<адрес wolf>}"
 WOLF_CONTAINER="${WOLF_CONTAINER:-wolf-wolf-1}"
 HTTP_PORT="${HTTP_PORT:-47989}"
 HTTPS_PORT="${HTTPS_PORT:-47984}"

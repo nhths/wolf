@@ -12,7 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-WOLF_HOST="${WOLF_HOST:-192.168.31.100}"
+WOLF_HOST="${WOLF_HOST:-<адрес wolf>}"
 DURATION="${DURATION:-90}"
 ARTIFACTS_ROOT="${ARTIFACTS_ROOT:-$BENCH_DIR/artifacts}"
 

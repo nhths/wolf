@@ -1,4 +1,4 @@
-файл: /home/nhths/Workspace/serverside/separated/wolf-testbench/artifacts/mtu-A/video.pcap
+файл: artifacts/mtu-A/video.pcap
 потоков видео: 3, FEC-пакетов: 6016, пакетов вне кадра: 0
 
 === поток 44420 -> 47999 ===
@@ -21,4 +21,4 @@
     кадр        0     409.8 КБ    305 пакетов
     кадр      122       1.3 КБ      1 пакетов
 
-отчёт: /home/nhths/Workspace/serverside/separated/wolf-testbench/artifacts/mtu-A/report.json
+отчёт: artifacts/mtu-A/report.json
