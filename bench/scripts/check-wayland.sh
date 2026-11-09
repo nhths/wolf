@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-IMAGE="${WOLF_IMAGE:-ghcr.io/games-on-whales/wolf:latest}"
+IMAGE="${WOLF_IMAGE:-ghcr.io/games-on-whales/wolf:sha-db709cf}"
 RUN_DIR="${RUN_DIR:-/tmp/wolf-wayland-check}"
 WIDTH="${WIDTH:-640}"
 HEIGHT="${HEIGHT:-480}"

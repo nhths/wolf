@@ -18,7 +18,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-IMAGE="${WOLF_IMAGE:-ghcr.io/games-on-whales/wolf:latest}"
+IMAGE="${WOLF_IMAGE:-ghcr.io/games-on-whales/wolf:sha-db709cf}"
 CONTAINER="${CONTAINER:-wolf-bench}"
 WORK_DIR="${WORK_DIR:-/tmp/wolf-bench-local}"
 NET="${NET:-host}"

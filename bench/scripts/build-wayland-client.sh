@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-IMAGE="${WOLF_IMAGE:-ghcr.io/games-on-whales/wolf:latest}"
+IMAGE="${WOLF_IMAGE:-ghcr.io/games-on-whales/wolf:sha-db709cf}"
 SRC_DIR="$BENCH_DIR/wayland-client"
 
 mkdir -p "$SRC_DIR/build"

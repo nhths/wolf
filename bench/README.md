@@ -96,6 +96,10 @@ cd bench
 на порту ping'а: `state/sessions.hpp` отдаёт клиенту
 `video_stream_port = VIDEO_PING_PORT`.
 
+Образ wolf'а закреплён по sha: `ghcr.io/games-on-whales/wolf:sha-db709cf`
+(переопределяется через `WOLF_IMAGE`). Тег `main` на момент прогона
+не проходил фазу `/launch`, поэтому версия не «плавающая».
+
 Эмуляция канала:
 
 ```sh
