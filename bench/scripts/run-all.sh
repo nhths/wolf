@@ -12,7 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-WOLF_HOST="${WOLF_HOST:-<адрес wolf>}"
+WOLF_HOST="${WOLF_HOST:-}"
 DURATION="${DURATION:-90}"
 ARTIFACTS_ROOT="${ARTIFACTS_ROOT:-$BENCH_DIR/artifacts}"
 
@@ -25,6 +25,7 @@ RUNS=(
 
 log() { printf '\n=== %s ===\n' "$*" >&2; }
 die() { printf 'ОШИБКА: %s\n' "$*" >&2; exit 1; }
+[ -n "$WOLF_HOST" ] || die "укажите хост wolf: WOLF_HOST=<адрес>"
 
 build() {
   log "собираю клиент"

@@ -126,7 +126,7 @@ Moonlight, а не с его имитацией.
 
 ```sh
 cd bench
-WOLF_HOST=<адрес wolf> \
+WOLF_HOST=wolf.example.lan \
 DURATION=90 \
 PRODUCER_W=2560 PRODUCER_H=1440 PRODUCER_FPS=60 \
 CLIENT_A="1920 1080 60 20000" \
@@ -134,7 +134,8 @@ CLIENT_B="1600 900 60 15000" \
 ./scripts/bench.sh
 ```
 
-* `WOLF_HOST` — адрес wolf (нужен ssh без пароля);
+* `WOLF_HOST` — адрес wolf (нужен ssh без пароля); без переменной скрипт
+  сразу падает с понятным сообщением;
 * `PRODUCER_*` — разрешение и частота producer'а в лобби;
 * `CLIENT_A` / `CLIENT_B` — `ширина высота fps битрейт_кбит` для каждого;
 * `DURATION` — сколько секунд держать поток;
@@ -201,7 +202,7 @@ FEC-пакеты (parity shards) картинки не несут: их `fecInfo
 работающие настройки.
 
 ```sh
-ssh root@<адрес wolf> 'cat /etc/wolf/cfg/config.toml' > /tmp/host-config.toml
+ssh root@wolf.example.lan 'cat /etc/wolf/cfg/config.toml' > /tmp/host-config.toml
 ./scripts/compare_config.py /tmp/host-config.toml \
   ../../src/moonlight-server/state/default/config.v7.toml --section gstreamer
 ```

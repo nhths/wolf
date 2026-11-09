@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-WOLF_HOST="${WOLF_HOST:-<адрес wolf>}"
+WOLF_HOST="${WOLF_HOST:-}"
 WOLF_CONTAINER="${WOLF_CONTAINER:-wolf-wolf-1}"
 HTTP_PORT="${HTTP_PORT:-47989}"
 HTTPS_PORT="${HTTPS_PORT:-47984}"
@@ -20,6 +20,7 @@ CLIENT_BIN="${CLIENT_BIN:-$BENCH_DIR/client/build/bench-client}"
 
 log() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*" >&2; }
 die() { log "ОШИБКА: $*"; exit 1; }
+[ -n "$WOLF_HOST" ] || die "укажите хост wolf: WOLF_HOST=<адрес>"
 
 [ -x "$CLIENT_BIN" ] || die "не собран клиент: $CLIENT_BIN"
 

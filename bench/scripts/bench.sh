@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BENCH_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 # ---------------------------------------------------------------- параметры
-WOLF_HOST="${WOLF_HOST:-<адрес wolf>}"
+WOLF_HOST="${WOLF_HOST:-}"
 WOLF_CONTAINER="${WOLF_CONTAINER:-wolf-wolf-1}"
 # API wolf живёт на unix-сокете; /var/run/wolf примонтирован на хост из контейнера.
 WOLF_SOCK="${WOLF_SOCK:-/var/run/wolf/wolf.sock}"
@@ -67,6 +67,7 @@ log() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*" >&2; }
 die() { log "ОШИБКА: $*"; exit 1; }
 
 require() { command -v "$1" >/dev/null 2>&1 || die "не найдено: $1"; }
+[ -n "$WOLF_HOST" ] || die "укажите хост wolf: WOLF_HOST=<адрес>"
 
 ssh_wolf() { ssh -o ConnectTimeout=10 "$WOLF_HOST" "$@"; }
 
