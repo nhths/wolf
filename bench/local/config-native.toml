@@ -1,0 +1,84 @@
+# Конфиг wolf для нативного стенда (wolf запускается на этой же машине,
+# без контейнера).
+#
+# Отличия от боевого и от контейнерного стенда:
+#   * видео-источник — videotestsrc с шумом: в контейнерном стенде кадры
+#     рисует wayland-клиент (нужен gst-wayland-display), а нативно
+#     плагина нет — шум даёт такие же крупные кадры, то есть RTP-пакеты
+#     полного размера;
+#   * приложение — процесс `sleep`: клиенту нужен только идентификатор
+#     приложения из /applist;
+#   * правило размера пакета — плейсхолдер __RULES__, его подставляет
+#     scripts/run-native.sh.
+#
+# Плейсхолдер __RULES__ — блок [[video_packet_size_rules]] или пусто.
+
+hostname = "wolf-native"
+config_version = 7
+paired_clients = []
+
+__RULES__
+
+[[profiles]]
+id = "moonlight-profile-id"
+
+[[profiles.apps]]
+title = "wl-shm"
+start_virtual_compositor = false
+start_audio_server = false
+render_node = "/dev/dri/renderD128"
+
+[profiles.apps.runner]
+type = "process"
+run_cmd = "/bin/sleep 600"
+
+[gstreamer.video]
+
+# Источник видео для нативного стенда. Имя элемента содержит
+# "name=interpipesrc" — иначе wolf считает источник "interpipesrc без
+# имени" и подменяет его на interpipesrc (configTOML.cpp), а кадры
+# приходят только из композитного дисплея, которого нативно нет.
+default_source = 'videotestsrc pattern=snow ! identity name=interpipesrc_marker'
+
+default_sink = """
+queue ! \
+rtpmoonlightpay_video name=moonlight_pay \
+payload_size={payload_size} fec_percentage={fec_percentage} min_required_fec_packets={min_required_fec_packets} !
+appsink sync=false max-buffers=1 drop=true name=wolf_udp_sink
+"""
+
+[[gstreamer.video.h264_encoders]]
+plugin_name = "x264"
+check_elements = ["x264enc"]
+video_params = """
+videoconvertscale !
+videorate !
+video/x-raw, width={width}, height={height}, framerate={fps}/1, format=I420,
+chroma-site={color_range}, colorimetry={color_space}\
+"""
+encoder_pipeline = """
+x264enc pass=qual tune=zerolatency speed-preset=superfast b-adapt=false bframes=0 ref=1
+sliced-threads=true threads={slices_per_frame} option-string="slices={slices_per_frame}:keyint=infinite:open-gop=0"
+b-adapt=false bitrate={bitrate} aud=false !
+video/x-h264, profile=high, stream-format=byte-stream\
+"""
+
+[gstreamer.audio]
+
+default_source = """
+interpipesrc name=interpipesrc_{}_audio listen-to={session_id}_audio is-live=true stream-sync=restart-ts max-bytes=0 max-buffers=3 block=false\
+"""
+
+default_audio_params = "queue max-size-buffers=3 leaky=downstream ! audiorate ! audioconvert"
+
+default_opus_encoder = """
+opusenc bitrate={bitrate} bitrate-type=cbr frame-size={packet_duration} bandwidth=fullband \
+audio-type=restricted-lowdelay max-payload-size=1400\
+"""
+
+default_sink = """
+queue ! \
+rtpmoonlightpay_audio name=moonlight_pay packet_duration={packet_duration} encrypt={encrypt} \
+aes_key="{aes_key}" aes_iv="{aes_iv}" !
+appsink name=wolf_udp_sink\
+"""
