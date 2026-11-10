@@ -137,6 +137,30 @@ struct Profile {
   std::vector<BaseApp> apps;
 };
 
+/**
+ * Caps the size of the video RTP packets for the clients coming from a given
+ * network.
+ *
+ * The client asks for the biggest packet it believes it can handle, but it
+ * only knows its own network, not the MTU of the path towards us: a packet
+ * that doesn't fit is dropped by the tunnel without any notice, and the
+ * client gives up after a few seconds.
+ */
+struct VideoPacketSizeRule {
+  /**
+   * The network of the clients, in CIDR notation (e.g. "172.26.0.0/16").
+   */
+  std::string network;
+
+  /**
+   * The maximum size of the video RTP packet for those clients. A packet
+   * carries the RTP + NV headers and the payload, so the resulting IP packet
+   * is `max_packet_size + 44` bytes and has to fit the path MTU (1420 on a
+   * WireGuard tunnel => 1376).
+   */
+  int max_packet_size = 1392;
+};
+
 struct WolfConfig {
   std::string hostname;
   std::string uuid;
@@ -144,6 +168,11 @@ struct WolfConfig {
   std::vector<PairedClient> paired_clients;
   std::vector<Profile> profiles;
   GstreamerSettings gstreamer;
+  /**
+   * The video packet size limits, one per client network. The most specific
+   * matching network wins, so a /16 rule can be narrowed down by a /24 one.
+   */
+  std::vector<VideoPacketSizeRule> video_packet_size_rules;
 };
 
 struct BaseConfig {

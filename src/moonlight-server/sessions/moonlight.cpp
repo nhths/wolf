@@ -236,13 +236,36 @@ setup_moonlight_handlers(const immer::box<state::AppState> &app_state,
 
   handlers.push_back(app_state->event_bus->register_handler<immer::box<events::VideoSession>>(
       [ev_bus = app_state->event_bus,
-       gst_context = app_state->gst_context](const immer::box<events::VideoSession> &sess) {
+       gst_context = app_state->gst_context,
+       packet_size_rules = app_state->config->video_packet_size_rules](
+          const immer::box<events::VideoSession> &sess) {
+        auto video_session = sess;
+        // The client asks for the biggest packet it believes it can handle, but
+        // it only knows its own network, not the MTU of the path towards us: a
+        // packet that doesn't fit is dropped by the tunnel without any notice.
+        auto max_packet_size = state::match_video_packet_size_rule(packet_size_rules, video_session->client_ip);
+        if (max_packet_size && video_session->packet_size > *max_packet_size) {
+          logs::log(logs::debug,
+                    "[GSTREAMER] Clamping video packet size from {} to {} for client {}",
+                    video_session->packet_size,
+                    *max_packet_size,
+                    video_session->client_ip);
+          video_session = video_session.update([&](const events::VideoSession &s) {
+            auto clamped = s;
+            clamped.packet_size = *max_packet_size;
+            // The client computes the FEC block size from the packet size it
+            // negotiated, so the recovery can't work with a smaller packet.
+            clamped.fec_percentage = 0;
+            return clamped;
+          });
+        }
+
         // Start a thread that will wait for the RTP ping event
-        std::thread([sess, ev_bus, gst_context]() {
-          auto ping_ev = wait_for_ping<events::RTPVideoPingEvent>(ev_bus, sess);
+        std::thread([video_session, ev_bus, gst_context]() {
+          auto ping_ev = wait_for_ping<events::RTPVideoPingEvent>(ev_bus, video_session);
 
           // Start streaming
-          streaming::start_streaming_video(sess,
+          streaming::start_streaming_video(video_session,
                                            ev_bus,
                                            ping_ev->client_ip,
                                            ping_ev->client_port,

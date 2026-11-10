@@ -6,6 +6,19 @@ config_version = 7
 # A list of paired clients that will be allowed to stream
 paired_clients = []
 
+# Limits for the size of the video RTP packets, one rule per client network.
+#
+# The client asks for the biggest packet it believes it can handle, but it only
+# knows its own network, not the MTU of the path towards the server: a packet
+# that doesn't fit is dropped by the tunnel without any notice, and the client
+# gives up after a few seconds. The resulting IP packet is
+# `max_packet_size + 44` bytes, so on a WireGuard tunnel (MTU 1420) the limit
+# is 1376. The most specific matching network wins.
+#
+# [[video_packet_size_rules]]
+# network = "172.26.0.0/16"
+# max_packet_size = 1376
+
 ######################
 # Profiles: a list of different profiles, each with a list of apps
 ######################

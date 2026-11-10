@@ -3,6 +3,7 @@
 #include "gst-video-context.hpp"
 
 #include <boost/asio.hpp>
+#include <algorithm>
 #include <chrono>
 #include <core/audio.hpp>
 #include <core/input.hpp>
@@ -10,6 +11,7 @@
 #include <deque>
 #include <eventbus/event_bus.hpp>
 #include <events/events.hpp>
+#include <helpers/logger.hpp>
 #include <helpers/tsqueue.hpp>
 #include <immer/array.hpp>
 #include <immer/atom.hpp>
@@ -82,6 +84,11 @@ struct Config {
   bool support_av1;
 
   /**
+   * The video packet size limits, one per client network.
+   */
+  std::vector<wolf::config::VideoPacketSizeRule> video_packet_size_rules;
+
+  /**
    * Mutable, paired_clients will be loaded up on startup
    * but can be added at runtime
    */
@@ -94,6 +101,66 @@ struct Config {
    */
   std::shared_ptr<immer::atom<ProfilesList>> profiles;
 };
+
+/**
+ * Returns the maximum video packet size allowed for a client connecting from
+ * `client_ip`, according to the given rules. The most specific matching
+ * network wins, so a /16 rule can be narrowed down by a /24 one.
+ * Returns nullopt when no rule matches the client.
+ */
+inline std::optional<int> match_video_packet_size_rule(const std::vector<wolf::config::VideoPacketSizeRule> &rules,
+                                                        const std::string &client_ip) {
+  ba::ip::address address;
+  try {
+    address = ba::ip::make_address(client_ip);
+  } catch (const std::exception &) {
+    logs::log(logs::warning, "Unable to parse the client IP address '{}'", client_ip);
+    return std::nullopt;
+  }
+
+  const wolf::config::VideoPacketSizeRule *match = nullptr;
+  int match_prefix = -1;
+  for (const auto &rule : rules) {
+    try {
+      std::vector<unsigned char> addr_bytes;
+      std::vector<unsigned char> net_bytes;
+      int prefix_length = 0;
+      if (address.is_v4()) {
+        auto network = ba::ip::make_network_v4(rule.network);
+        auto bytes = address.to_v4().to_bytes();
+        auto net = network.network().to_bytes();
+        addr_bytes.assign(bytes.begin(), bytes.end());
+        net_bytes.assign(net.begin(), net.end());
+        prefix_length = network.prefix_length();
+      } else {
+        auto network = ba::ip::make_network_v6(rule.network);
+        auto bytes = address.to_v6().to_bytes();
+        auto net = network.network().to_bytes();
+        addr_bytes.assign(bytes.begin(), bytes.end());
+        net_bytes.assign(net.begin(), net.end());
+        prefix_length = network.prefix_length();
+      }
+
+      bool contains = true;
+      for (std::size_t i = 0; i < addr_bytes.size(); i++) {
+        int bits = std::clamp(prefix_length - static_cast<int>(i) * 8, 0, 8);
+        auto mask = static_cast<unsigned char>(bits == 0 ? 0 : 0xFF << (8 - bits));
+        if ((addr_bytes[i] & mask) != (net_bytes[i] & mask)) {
+          contains = false;
+          break;
+        }
+      }
+      if (contains && prefix_length > match_prefix) {
+        match = &rule;
+        match_prefix = prefix_length;
+      }
+    } catch (const std::exception &) {
+      logs::log(logs::warning, "Invalid network '{}' in the video packet size rules", rule.network);
+    }
+  }
+
+  return match ? std::optional<int>(match->max_packet_size) : std::nullopt;
+}
 
 /**
  * Host information like network, certificates and displays
