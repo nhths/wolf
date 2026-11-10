@@ -253,9 +253,6 @@ setup_moonlight_handlers(const immer::box<state::AppState> &app_state,
           video_session = video_session.update([&](const events::VideoSession &s) {
             auto clamped = s;
             clamped.packet_size = *max_packet_size;
-            // The client computes the FEC block size from the packet size it
-            // negotiated, so the recovery can't work with a smaller packet.
-            clamped.fec_percentage = 0;
             return clamped;
           });
         }
