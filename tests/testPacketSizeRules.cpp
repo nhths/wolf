@@ -12,7 +12,7 @@ TEST_CASE("Video packet size rules", "[packet_size]") {
 
   SECTION("clients are matched by network") {
     REQUIRE(match_video_packet_size_rule(rules, "172.26.0.5") == std::optional<int>(1376));
-    REQUIRE(match_video_packet_size_rule(rules, "172.27.0.5") == std::optional<int>(1376));
+    REQUIRE(match_video_packet_size_rule(rules, "172.26.5.7") == std::optional<int>(1376));
     REQUIRE(match_video_packet_size_rule(rules, "192.168.31.100") == std::optional<int>(1392));
   }
 
@@ -23,6 +23,7 @@ TEST_CASE("Video packet size rules", "[packet_size]") {
   SECTION("clients without a matching rule are left alone") {
     REQUIRE_FALSE(match_video_packet_size_rule(rules, "10.0.0.5").has_value());
     REQUIRE_FALSE(match_video_packet_size_rule(rules, "192.168.32.5").has_value());
+    REQUIRE_FALSE(match_video_packet_size_rule(rules, "172.27.0.5").has_value());
   }
 
   SECTION("garbage in, nothing out") {
